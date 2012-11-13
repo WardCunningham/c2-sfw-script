@@ -1,0 +1,114 @@
+#!/usr/bin/perl
+
+my $SEP = "\263";
+my ($title, $slug, $path);
+$_ = $ENV{'PATH_INFO'};
+
+if (/^\/([a-z-]+)\.json/) { &servePage($1) }
+elsif (/^\/favicon.(ico|png)/) { print "Content-type: image/png\n\n"; }
+elsif (/^\/system\/sitemap.json/) { print "Content-type: text/plain\n\n"; }
+else { &dump(*ENV) }
+
+
+sub dump {
+    local(*dict) = @_;
+    print "Content-type: text/plain\n\n";
+    for (keys(%dict)){print "$_\t$dict{$_}\n";}
+}
+
+sub servePage {
+	$title = $slug = $path = $_[0];
+	$path =~ s/-([a-z])/\U$1/g;
+	$path =~ s/^([a-z])/wiki.wdb\/\U$1/;
+	$title =~ s/^([a-z])/\U$1/;
+	$title =~ s/-([a-z])/ \U$1/g;
+	print "Status: 404 Not Found\r\n" unless -f $path;
+	print "Content-type: text/plain\n\n";
+	&convert($path);
+}
+
+sub randomid {
+	sprintf("%08d",rand(10**8)).sprintf("%08d",rand(10**8));
+}
+
+sub page {
+	my ($slug,$title,$story,$d) = @_;
+	$id = randomid();
+	my $a = <<;
+{"date": $d,  "id": "$id", "type": "create", "item": {"title": "$title", "story": $story}}
+
+	$page =~ s/}$/,"journal":[]}/;
+	#open F, ">pages/$slug.json" or die($!);
+	print <<;
+{"title": "$title", "story": $story, "journal": [$a]}
+
+}
+
+sub InPlace {
+	my ($num) = (@_);
+	my ($ref) = $InPlace[$num];
+	$ref =~ /https?:\/\/([^\/]+)*/;
+	return "[$ref $1]";
+}
+
+sub InternalLink {
+	my ($title) = $_[0];
+	$title =~ s/([a-z])([A-Z])/$1 $2/g;
+	"[[$title]]";
+}
+
+sub paragraph {
+	my ($text) = @_;
+	$InPlace=0;
+	while ($text =~ s/\b(https?):[^\s<>\[\]"'\(\)]*[^\s<>\[\]"'\(\)\,\.\?]/$SEP$InPlace$SEP/) { $InPlace[$InPlace++] = $&; }
+	$text =~ s/\b([A-Z][a-z]+([A-Z][a-z]+)+)\b/&InternalLink($1)/geo;
+	$text =~ s/'''(.*?)'''/<b>$1<\/b>/g;
+	$text =~ s/''(.*?)''/<i>$1<\/i>/g;
+	$text =~ s/\\/\\\\/g;
+	$text =~ s/\r?\n/\\n/g;
+	$text =~ s/\t/\\t/g;
+	$text =~ s/"/\\"/g;
+	$text =~s/$SEP(\d+)$SEP/&InPlace($1)/geo;
+	$id = randomid();
+	return <<;
+                {"type": "paragraph",
+                "text": "$text",
+                "id": "$id"}
+
+}
+
+#@welcome = ();
+#push @welcome, paragraph "This is our experimental collection of converted wiki pages.";
+#push @welcome, paragraph "Begin with StartingPoints or the original WelcomeVisitors.";
+#push @welcome, paragraph "Use [[Local Editing]].";
+#$welcome = join ',', @welcome;
+#page 'welcome-visitors', 'Welcome Visitors', "[$welcome]";
+
+sub convert {
+	($path) = @_;
+	#print "$path\n";
+	my $d = `date +%s -r $path`;
+        $d =~ s/\n/000/;
+	$db = `cat $path`;
+	%db = split $SEP, $db;
+	$date =$db{'date'};
+	$text =$db{'text'};
+
+	@lines = split /\r?\n/, $text;
+	@page = ();
+	for (@lines) {
+		if (/^\s$/) {
+			# ignore
+		} elsif (/^----+$/) {
+			$id = randomid();
+			push @page, <<;
+				{"type": "pagefold", "text": "o o o", "id": "$id"}
+
+		} else {
+			push @page, paragraph $_;
+		}
+	}
+	$page = join ',', @page;
+	page $slug, $title, "[$page]", $d;
+}
+
