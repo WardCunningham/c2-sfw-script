@@ -1,20 +1,21 @@
 #!/usr/bin/perl
 
+#	<VirtualHost *:80>
+#	        ServerName sfw.c2.com
+#	        Header add Access-Control-Allow-Origin "*"
+#	        ScriptAlias / /home/httpd/cgi-bin/sfw/
+#	</VirtualHost>
+
 my $SEP = "\263";
 my ($title, $slug, $path);
 $_ = $ENV{'PATH_INFO'};
 
 if (/^\/([a-z-]+)\.json/) { &servePage($1) }
-elsif (/^\/favicon.(ico|png)/) { print "Content-type: image/png\n\n"; }
+elsif (/^\/favicon.(ico|png)/) { print "Location: http://ward.c2.com/favicon.png\n\n"; }
+elsif (/^\/$/) { print "Content-type: text/html\n\n", `curl -s http://fed.wiki.org`; }
 elsif (/^\/system\/sitemap.json/) { print "Content-type: text/plain\n\n"; }
-else { &dump(*ENV) }
+else { print "Location: http://fed.wiki.org$ENV{'REQUEST_URI'}\n\n"; }
 
-
-sub dump {
-    local(*dict) = @_;
-    print "Content-type: text/plain\n\n";
-    for (keys(%dict)){print "$_\t$dict{$_}\n";}
-}
 
 sub servePage {
 	$title = $slug = $path = $_[0];
@@ -38,7 +39,6 @@ sub page {
 {"date": $d,  "id": "$id", "type": "create", "item": {"title": "$title", "story": $story}}
 
 	$page =~ s/}$/,"journal":[]}/;
-	#open F, ">pages/$slug.json" or die($!);
 	print <<;
 {"title": "$title", "story": $story, "journal": [$a]}
 
@@ -71,18 +71,9 @@ sub paragraph {
 	$text =~s/$SEP(\d+)$SEP/&InPlace($1)/geo;
 	$id = randomid();
 	return <<;
-                {"type": "paragraph",
-                "text": "$text",
-                "id": "$id"}
+{"type": "paragraph", "text": "$text", "id": "$id"}
 
 }
-
-#@welcome = ();
-#push @welcome, paragraph "This is our experimental collection of converted wiki pages.";
-#push @welcome, paragraph "Begin with StartingPoints or the original WelcomeVisitors.";
-#push @welcome, paragraph "Use [[Local Editing]].";
-#$welcome = join ',', @welcome;
-#page 'welcome-visitors', 'Welcome Visitors', "[$welcome]";
 
 sub convert {
 	($path) = @_;
@@ -100,9 +91,7 @@ sub convert {
 		if (/^\s$/) {
 			# ignore
 		} elsif (/^----+$/) {
-			$id = randomid();
-			push @page, <<;
-				{"type": "pagefold", "text": "o o o", "id": "$id"}
+			push @page, paragraph "<hr>";
 
 		} else {
 			push @page, paragraph $_;
