@@ -13,9 +13,25 @@ $_ = $ENV{'PATH_INFO'};
 if (/^\/([a-z-]+)\.json/) { &servePage($1) }
 elsif (/^\/favicon.(ico|png)/) { print "Location: http://ward.c2.com/favicon.png\n\n"; }
 elsif (/^\/$/) { print "Content-type: text/html\n\n", `curl -s http://fed.wiki.org`; }
-elsif (/^\/system\/sitemap.json/) { print "Content-type: text/plain\n\n"; }
+elsif (/^\/system\/sitemap.json/) { &serveSitemap() }
 else { print "Location: http://fed.wiki.org$ENV{'REQUEST_URI'}\n\n"; }
 
+sub sitemapEntry {
+        ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("wiki.wdb/$_");
+        $title = $slug = $_;
+        $title =~ s/([a-z])([A-Z])/$1 $2/g;
+        $slug =~ s/([a-z])([A-Z])/$1-$2/g;
+        $slug = lc $slug;
+        return <<;
+{"slug":"$slug", "title":"$title", "date":${mtime}000}
+
+}
+
+sub serveSitemap {
+	print "Content-type: text/json\n\n";
+	@pages = split "\n", `ls -t wiki.wdb | head -300`;
+	print "[", join(",", map(&sitemapEntry(), @pages)), "]\n";
+}
 
 sub servePage {
 	$title = $slug = $path = $_[0];
