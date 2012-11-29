@@ -93,6 +93,7 @@ sub paragraph {
 
 sub convert {
 	($path) = @_;
+	$page = $1 if $path=~/([A-Za-z]+)$/;
 	#print "$path\n";
 	my $d = `date +%s -r $path`;
         $d =~ s/\n/000/;
@@ -113,6 +114,7 @@ sub convert {
 			push @page, paragraph $_;
 		}
 	}
+	push @page, paragraph "See original on  http://c2.com/cgi/wiki?$page";
 	$page = join ',', @page;
 	page $slug, $title, "[$page]", $d;
 }
