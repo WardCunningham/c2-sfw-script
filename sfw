@@ -63,8 +63,14 @@ sub page {
 sub InPlace {
 	my ($num) = (@_);
 	my ($ref) = $InPlace[$num];
-	$ref =~ /https?:\/\/([^\/]+)*/;
-	return "[$ref $1]";
+	$ref =~ s/^http:([^\/])/http:\/\/c2.com\/$1/;
+	my $site = $1 if $ref =~ /https?:\/\/([^\/]+)*/;
+	return "[$ref $site]" unless $ref =~ /\.(gif|jpg|jpeg|png)$/;
+	my $id = randomid();
+	push @page, <<;
+{"type":"image", "url":"$ref", "text":"$site", "id":"$id"}
+
+	return "";
 }
 
 sub InternalLink {
@@ -112,7 +118,7 @@ sub convert {
 			push @page, paragraph "<hr>";
 
 		} else {
-			push @page, paragraph $_;
+			push @page, paragraph $_ if /\S/;
 		}
 	}
 	push @page, paragraph "See original on  http://c2.com/cgi/wiki?$page";
