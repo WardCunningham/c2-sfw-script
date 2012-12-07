@@ -111,13 +111,18 @@ sub convert {
 
 	@lines = split /\r?\n/, $text;
 	@page = ();
-	for (@lines) {
+	$line = 0;
+	while($line <= $#lines) {
+		$_ = $lines[$line++];
 		if (/^\s$/) {
 			# ignore
 		} elsif (/^----+$/) {
 			push @page, paragraph "<hr>";
 
 		} else {
+			while($lines[$line] =~ /^\w/) {
+				$_ .= "\n" . $lines[$line++];
+			}
 			push @page, paragraph $_ if /\S/;
 		}
 	}
