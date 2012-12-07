@@ -98,6 +98,17 @@ sub paragraph {
 
 }
 
+sub code {
+	$id = randomid();
+	s/\\/\\\\/g;
+	s/\r?\n/\\n/g;
+	s/\t/  /g;
+	s/"/\\"/g;
+	return <<;
+{"type": "code", "text": "$_", "id": "$id"}
+
+}
+
 sub convert {
 	($path) = @_;
 	$page = $1 if $path=~/([A-Za-z]+)$/;
@@ -119,6 +130,11 @@ sub convert {
 		} elsif (/^----+$/) {
 			push @page, paragraph "<hr>";
 
+		} elsif (/^\s/) {
+			while($lines[$line] =~ /^\s/) {
+				$_ .= "\n" . $lines[$line++];
+			}
+			push @page, code $_ if /\S/;
 		} else {
 			while($lines[$line] =~ /^\w/) {
 				$_ .= "\n" . $lines[$line++];
