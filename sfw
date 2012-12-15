@@ -130,8 +130,8 @@ sub convert {
 		} elsif (/^----+$/) {
 			push @page, paragraph "<hr>";
 
-		} elsif (/^\s/) {
-			while($lines[$line] =~ /^\s/) {
+		} elsif (/^\s+[^\*]/) {
+			while($lines[$line] =~ /^\s[^\*]/) {
 				$_ .= "\n" . $lines[$line++];
 			}
 			push @page, code $_ if /\S/;
