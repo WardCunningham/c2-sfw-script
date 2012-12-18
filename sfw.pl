@@ -6,6 +6,8 @@
 #	        ScriptAlias / /home/httpd/cgi-bin/sfw/
 #	</VirtualHost>
 
+use Digest::MD5 'md5_hex';
+
 my $SEP = "\263";
 my ($title, $slug, $path);
 $_ = $ENV{'PATH_INFO'};
@@ -48,12 +50,12 @@ sub servePage {
 }
 
 sub randomid {
-	sprintf("%08d",rand(10**8)).sprintf("%08d",rand(10**8));
+	md5_hex $slug . $_[0];
 }
 
 sub page {
 	my ($slug,$title,$story,$d) = @_;
-	$id = randomid();
+	$id = randomid $story;
 	my $a = <<;
 {"date": $d,  "id": "$id", "type": "create", "item": {"title": "$title", "story": $story}}
 
@@ -69,7 +71,7 @@ sub InPlace {
 	$ref =~ s/^http:([^\/])/http:\/\/c2.com\/$1/;
 	my $site = $1 if $ref =~ /https?:\/\/([^\/]+)*/;
 	return "[$ref $site]" unless $ref =~ /\.(gif|jpg|jpeg|png)$/;
-	my $id = randomid();
+	my $id = randomid $ref;
 	push @page, <<;
 {"type":"image", "url":"$ref", "text":"$site", "id":"$id"}
 
@@ -95,18 +97,18 @@ sub paragraph {
 	$text =~ s/\t/\\t/g;
 	$text =~ s/"/\\"/g;
 	$text =~s/$SEP(\d+)$SEP/&InPlace($1)/geo;
-	$id = randomid();
+	$id = randomid $text;
 	return <<;
 {"type": "paragraph", "text": "$text", "id": "$id"}
 
 }
 
 sub code {
-	$id = randomid();
 	s/\\/\\\\/g;
 	s/\r?\n/\\n/g;
 	s/\t/  /g;
 	s/"/\\"/g;
+	$id = randomid $_;
 	return <<;
 {"type": "code", "text": "$_", "id": "$id"}
 
