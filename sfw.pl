@@ -11,10 +11,13 @@ my ($title, $slug, $path);
 $_ = $ENV{'PATH_INFO'};
 
 if (/^\/([a-z-]+)\.json/) { &servePage($1) }
-elsif (/^\/favicon.(ico|png)/) { print "Location: http://ward.c2.com/favicon.png\n\n"; }
-elsif (/^\/$/) { print "Content-type: text/html\n\n", `curl -s http://fed.wiki.org`; }
+elsif (/^\/favicon\.(ico|png)/) { print "Content-type: image/png\n\n", `cat favicon.png`; }
+elsif (/^\/client\.js\b/) { print "Content-type: text/html\n\n", `cat repo/client/client.js`; }
+elsif (/^\/style\.css\b/) { print "Content-type: text/css\n\n", `cat repo/client/style.css`; }
+elsif (/^\/(\w+)\.png\b/) { print "Content-type: text/css\n\n", `cat repo/client/$1.png`; }
+elsif (/^\/$/) { print "Content-type: text/html\n\n", `cat welcome-visitors.html`; }
 elsif (/^\/system\/sitemap.json/) { &serveSitemap() }
-else { print "Location: http://fed.wiki.org$ENV{'REQUEST_URI'}\n\n"; }
+else {  print "Content-type: text/html\n\n", `cat welcome-visitors.html`; }
 
 sub sitemapEntry {
         ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("wiki.wdb/$_");
