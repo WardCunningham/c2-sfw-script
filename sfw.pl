@@ -3,7 +3,10 @@
 #	<VirtualHost *:80>
 #	        ServerName sfw.c2.com
 #	        Header add Access-Control-Allow-Origin "*"
-#	        ScriptAlias / /home/httpd/cgi-bin/sfw/
+#	        Alias /images/ /home/httpd/virt/sfw/repo/client/images/
+#	        Alias /js/ /home/httpd/virt/sfw/repo/client/js/
+#	        Alias /plugins/ /home/httpd/virt/sfw/repo/client/plugins/
+#	        ScriptAlias / /home/httpd/virt/sfw/sfw.pl/
 #	</VirtualHost>
 
 use Digest::MD5 'md5_hex';
