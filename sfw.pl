@@ -92,6 +92,7 @@ sub paragraph {
 	$InPlace=0;
 	while ($text =~ s/\b(https?):[^\s<>\[\]"'\(\)]*[^\s<>\[\]"'\(\)\,\.\?]/$SEP$InPlace$SEP/) { $InPlace[$InPlace++] = $&; }
 	$text =~ s/\b([A-Z][a-z]+([A-Z][a-z]+)+)\b/&InternalLink($1)/geo;
+	$text =~ s/]]''''('')?(\w)/]]$2/g;
 	$text =~ s/'''(.*?)'''/<b>$1<\/b>/g;
 	$text =~ s/''(.*?)''/<i>$1<\/i>/g;
 	$text =~ s/^\s*\*+//;
