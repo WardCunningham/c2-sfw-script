@@ -2,6 +2,7 @@
 
 #	<VirtualHost *:80>
 #	        ServerName sfw.c2.com
+#	        ServerAlias *.sfw.c2.com
 #	        Header add Access-Control-Allow-Origin "*"
 #	        Alias /images/ /home/httpd/virt/sfw/repo/client/images/
 #	        Alias /js/ /home/httpd/virt/sfw/repo/client/js/
