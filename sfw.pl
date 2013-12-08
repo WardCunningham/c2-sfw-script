@@ -13,10 +13,11 @@ use Digest::MD5 'md5_hex';
 
 my $SEP = "\263";
 my ($title, $slug, $path);
+my $subdomain = uc($1).lc($2) if ($ENV{'HTTP_HOST'} =~ /^([a-z])([a-z]+?)\.sfw\.c2\.com$/);
 $_ = $ENV{'PATH_INFO'};
 
 if (/^\/([a-z-]+)\.json/) { &servePage($1) }
-elsif (/^\/favicon\.(ico|png)/) { print "Content-type: image/png\n\n", `cat favicon.png`; }
+elsif (/^\/favicon\.(ico|png)/) { &serveFavicon(); }
 elsif (/^\/client\.js\b/) { print "Content-type: text/html\n\n", `cat repo/client/client.js`; }
 elsif (/^\/style\.css\b/) { print "Content-type: text/css\n\n", `cat repo/client/style.css`; }
 elsif (/^\/(\w+)\.png\b/) { print "Content-type: text/css\n\n", `cat repo/client/$1.png`; }
@@ -37,7 +38,11 @@ sub sitemapEntry {
 
 sub serveSitemap {
 	print "Content-type: text/json\n\n";
-	@pages = split "\n", `ls -t wiki.wdb | head -300`;
+	if ($subdomain) {
+		@pages = split "\n", `ls -t wiki.wdb | grep $subdomain | head -500`;
+	} else {
+		@pages = split "\n", `ls -t wiki.wdb | head -300`;
+	}
 	print "[", join(",", map(&sitemapEntry(), @pages)), "]\n";
 }
 
@@ -50,6 +55,16 @@ sub servePage {
 	print "Status: 404 Not Found\r\n" unless -f $path;
 	print "Content-type: text/plain\n\n";
 	&convert($path);
+}
+
+sub serveFavicon {
+	print "Content-type: image/png\n\n";
+	if ($subdomain) {
+		`curl -s http://sfw.c2.fed.wiki.org/random.png >flags/$subdomain.png` unless -f "flags/$subdomain.png";
+		print `cat flags/$subdomain.png`
+	} else {
+		print `cat favicon.png`;
+	}
 }
 
 sub randomid {
