@@ -154,7 +154,12 @@ sub convert {
 			# ignore
 		} elsif (/^----+$/) {
 			push @page, paragraph "<hr>";
-
+		} elsif (/^\s+:\s+(.*)$/) {
+			push @page, paragraph $1;
+		} elsif (/^\s+(.+?):\s+(.*)$/) {
+			push @page, paragraph "$1:<br>$2";
+		} elsif (/^(\s+)(\d+\.?|\*)\s+(.*)$/) {
+			push @page, paragraph "* $3"; 
 		} elsif (/^\s+[^\*]/) {
 			while($lines[$line] =~ /^\s[^\*]/) {
 				$_ .= "\n" . $lines[$line++];
