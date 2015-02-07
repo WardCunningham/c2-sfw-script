@@ -119,7 +119,7 @@ sub paragraph {
 	$text =~s/$SEP(\d+)$SEP/&InPlace($1)/geo;
 	$id = randomid $text;
 	return <<;
-{"type": "paragraph", "text": "$text", "id": "$id"}
+{"type": "html", "text": "$text", "id": "$id"}
 
 }
 
